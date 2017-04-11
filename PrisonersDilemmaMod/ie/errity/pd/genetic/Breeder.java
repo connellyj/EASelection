@@ -4,8 +4,8 @@ import ie.errity.pd.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.BitSet;
-import java.util.Random;
+import java.lang.reflect.Array;
+import java.util.*;
 
 
 /**
@@ -66,7 +66,7 @@ public class Breeder extends JPanel
     {
 	curPopulation = c;	//population to breed
 	popSize = curPopulation.length;
-	Prisoner Selected[] = new Prisoner[popSize]; // parent pop after selection 
+	Prisoner Selected[] = new Prisoner[popSize]; // parent pop after selection
 	
 		
 	// Select parents for next gen 
@@ -81,31 +81,17 @@ public class Breeder extends JPanel
 	// select the best individual from the population.  Otherwise select a random individual.
 	// In this method a param of 0 gives random selection, and a param of 100 gives best-wins-all selection.
 	if (selection == 0) {
-	    // find index of most fit individual
-	    double maxFit = 0;
-	    int indexBest = 0;
-	    for (int i=0; i<popSize; i++) {
-		if (curPopulation[i].getScore() > maxFit) {
-		    maxFit = curPopulation[i].getScore();
-		    indexBest = i;
-		}
-	    }
-
-	    // select according to description above for this method
-	    for (int i=0; i<popSize; i++) {
-		int selIndex = 0;
-		if (rand.nextInt(100) < selParam)  // rand less than param, select best individual
-		    {
-		    selIndex = indexBest;
-		    }
-		else  // otherwise select random individual
-		    {
-			selIndex = rand.nextInt(popSize);
-		    }
-		Selected[i] = (Prisoner)curPopulation[selIndex].clone();
-	    }
+	    Selected = defaultSelection(Selected);
 	}
-	
+
+	if(selection == 1) {
+		Selected = fitPropSelection(Selected);
+	}
+
+	if (selection == 2) {
+		Selected = tournamentSelection(Selected);
+	}
+
 	else {  // any other selection method fill pop with always cooperate
 	    for (int i=0; i<popSize; i++)
 		Selected[i] = new Prisoner("ALLC");
@@ -114,7 +100,13 @@ public class Breeder extends JPanel
 			
 	//Crossover & Mutate each pair of selected parents	
 	BitSet Offspring[] = new BitSet[2];  // temporarily holds 2 children during crossover/mutation
-	for (int d=0; d<popSize; d+=2) {
+		// MAYBE CLEAN UP LATER??
+		int tmp = 0;
+		if(selection == 1) {
+			tmp = selParam;
+			for(int i = 0; i < selParam; i++) Selected[i].setScore(0);
+		}
+	for (int d=tmp; d<popSize; d+=2) {
 	    // in case of odd population, just mutate and replace last individual
 	    if (d+1 >= popSize) {
 		Offspring[0] = Genetic.mutate(Selected[d].getStrat(), mutateP, rand);
@@ -140,11 +132,115 @@ public class Breeder extends JPanel
 		Selected[d+1] = new Prisoner(Offspring[1]);
 	    }
 	}
+
 	// pass on children pop to be parents of next gen
 	curPopulation = Selected;
 	repaint();	//update display (if any)
 	return curPopulation; //return the bred population
     }
+
+	private Prisoner[] tournamentSelection(Prisoner[] prisoners) {
+		ArrayList<Prisoner> prisonerList = new ArrayList<>(Arrays.asList(curPopulation));
+		for (int i = 0; i < popSize; i++) {
+			Collections.shuffle(prisonerList);
+			Prisoner max = prisonerList.get(0);
+			for (int j = 1; j < selParam; j++) {
+				if(prisonerList.get(i).getScore() > max.getScore()) max = prisonerList.get(i);
+			}
+			prisoners[i] = max;
+		}
+		return prisoners;
+	}
+
+	private Prisoner[] fitPropSelection(Prisoner[] prisoners) {
+    	double variance = 0.0;
+    	double totalFitness = 0.0;
+    	double meanFitness;
+    	double meanFitnessScaled = 0.0;
+    	double stdDeviation;
+    	double[] scaledFitnesses = new double[popSize];
+    	double[] ticks = new double[popSize - selParam];
+		System.out.println("score: " + curPopulation[0].getScore());
+    	// do elitism
+		if (selParam > 0) {
+			ArrayList<Prisoner> prisonerList = new ArrayList<>(Arrays.asList(curPopulation));
+			prisonerList.sort(Comparator.comparing(Prisoner::getScore));
+			for (int i = 0; i < selParam; i++) {
+				prisoners[i] = (Prisoner)(prisonerList.get(prisonerList.size() - 1 - i)).clone();
+			}
+		}
+		System.out.println("selParam: " + selParam);
+		System.out.println("popSize: " + popSize);
+
+		// calculate mean fitness
+		for (int i = 0; i < popSize; i++) {
+			totalFitness += curPopulation[i].getScore();
+		}
+		meanFitness = totalFitness / popSize;
+		System.out.println("meanFitness: " + meanFitness);
+
+		// calculate standard deviation
+		for (int i = 0; i < popSize; i++) {
+			variance += Math.pow((curPopulation[i].getScore() - meanFitness), 2);
+		}
+		variance /= popSize;
+		System.out.println("variance: " + variance);
+		stdDeviation = Math.pow(variance, 0.5);
+		System.out.println("stdDeviation: " + stdDeviation);
+
+		// calculate scaled fitnesses
+		for (int i = 0; i < popSize; i++) {
+			scaledFitnesses[i] = 1 + (curPopulation[i].getScore() - meanFitness) / (2 * stdDeviation);
+			meanFitnessScaled += scaledFitnesses[i];
+		}
+		System.out.println("sum of scaled: " + meanFitnessScaled);
+		meanFitnessScaled /= popSize;
+		System.out.println("mean scaled: " + meanFitnessScaled);
+
+		// select individuals
+		double random = rand.nextDouble() * meanFitnessScaled;
+		for (int i = 0; i < ticks.length; i++) {
+			ticks[i] = random + i * meanFitnessScaled;
+		}
+		int i = 0;
+		double fitSum = scaledFitnesses[0];
+		for (int j = selParam; j < popSize; j++) {
+			while(fitSum < ticks[j - selParam]) {
+				i++;
+				fitSum += scaledFitnesses[i];
+			}
+			prisoners[j] = (Prisoner) curPopulation[i].clone();
+		}
+
+    	return prisoners;
+	}
+
+	private Prisoner[] defaultSelection(Prisoner[] Selected) {
+		// find index of most fit individual
+		double maxFit = 0;
+		int indexBest = 0;
+		for (int i=0; i<popSize; i++) {
+			if (curPopulation[i].getScore() > maxFit) {
+				maxFit = curPopulation[i].getScore();
+				indexBest = i;
+			}
+		}
+
+		// select according to description above for this method
+		for (int i=0; i<popSize; i++) {
+			int selIndex = 0;
+			if (rand.nextInt(100) < selParam)  // rand less than param, select best individual
+			{
+				selIndex = indexBest;
+			}
+			else  // otherwise select random individual
+			{
+				selIndex = rand.nextInt(popSize);
+			}
+			Selected[i] = (Prisoner)curPopulation[selIndex].clone();
+		}
+		return Selected;
+	}
 	
 	
     /**
