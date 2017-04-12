@@ -62,97 +62,93 @@ public class Breeder extends JPanel
      *@param c	initial population (raw fitness of population must be calcualted previously)
      *@return the next generation
      */
-    public Prisoner[] Breed(Prisoner[] c)
-    {
-	curPopulation = c;	//population to breed
-	popSize = curPopulation.length;
-	Prisoner Selected[] = new Prisoner[popSize]; // parent pop after selection
-	
-		
-	// Select parents for next gen 
-	// ***ADD CODE (make separate functions) to perform each of the types of selection***
-	// selection is an int that determines the method to use
-	// selParam is an int that can be used as a parameter for a selection method if required
-	
-	// One silly selection method which uses rand and the selParam is given below
-	// Be sure to use "rand" class variable here as your random number generator (i.e. don't create a new one!)
+    public Prisoner[] Breed(Prisoner[] c) {
+		curPopulation = c;	//population to breed
+		popSize = curPopulation.length;
+		Prisoner[] selected; // parent pop after selection
 
-	// selection method 0, use parameter as a threshhold percentage.  If a random number is less than param, 
-	// select the best individual from the population.  Otherwise select a random individual.
-	// In this method a param of 0 gives random selection, and a param of 100 gives best-wins-all selection.
-	if (selection == 0) {
-	    Selected = defaultSelection(Selected);
-	}
 
-	if(selection == 1) {
-		Selected = fitPropSelection(Selected);
-	}
+		// Select parents for next gen
+		// ***ADD CODE (make separate functions) to perform each of the types of selection***
+		// selection is an int that determines the method to use
+		// selParam is an int that can be used as a parameter for a selection method if required
 
-	if (selection == 2) {
-		Selected = tournamentSelection(Selected);
-	}
+		// One silly selection method which uses rand and the selParam is given below
+		// Be sure to use "rand" class variable here as your random number generator (i.e. don't create a new one!)
 
-	else {  // any other selection method fill pop with always cooperate
-	    for (int i=0; i<popSize; i++)
-		Selected[i] = new Prisoner("ALLC");
-	}
-
-			
-	//Crossover & Mutate each pair of selected parents	
-	BitSet Offspring[] = new BitSet[2];  // temporarily holds 2 children during crossover/mutation
-		// MAYBE CLEAN UP LATER??
-		int tmp = 0;
-		if(selection == 1) {
-			tmp = selParam;
-			for(int i = 0; i < selParam; i++) Selected[i].setScore(0);
+		// selection method 0, use parameter as a threshhold percentage.  If a random number is less than param,
+		// select the best individual from the population.  Otherwise select a random individual.
+		// In this method a param of 0 gives random selection, and a param of 100 gives best-wins-all selection.
+		if (selection == 0) {
+			selected = defaultSelection();
+		}else if(selection == 1) {
+			selected = fitPropSelection();
+		}else if (selection == 2) {
+			selected = tournamentSelection();
+		} else {  // any other selection method fill pop with always cooperate
+			selected = new Prisoner[popSize];
+			for (int i=0; i<popSize; i++)
+			selected[i] = new Prisoner("ALLC");
 		}
-	for (int d=tmp; d<popSize; d+=2) {
-	    // in case of odd population, just mutate and replace last individual
-	    if (d+1 >= popSize) {
-		Offspring[0] = Genetic.mutate(Selected[d].getStrat(), mutateP, rand);
-		Selected[d] = new Prisoner(Offspring[0]);
-	    }
-	    else {
-							
-		if(rand.nextDouble() <= crossP) //Cross Over
-		    Offspring = Genetic.crossover(Selected[d].getStrat(),Selected[d+1].getStrat(), rand);
-		else //clones
-		    {
-			Offspring[0] = (BitSet)Selected[d].getStrat().clone();
-			Offspring[1] = (BitSet)Selected[d+1].getStrat().clone();
-		    }
-			
-		//Mutation
-		Offspring[0] = Genetic.mutate(Offspring[0],mutateP, rand);
-		Offspring[1] = Genetic.mutate(Offspring[1],mutateP, rand);
-			
-		//Replacement - we are done with parents d & d+1, so just replace with children without
-		// creating an entire new array
-		Selected[d] = new Prisoner(Offspring[0]);
-		Selected[d+1] = new Prisoner(Offspring[1]);
-	    }
-	}
 
-	// pass on children pop to be parents of next gen
-	curPopulation = Selected;
-	repaint();	//update display (if any)
-	return curPopulation; //return the bred population
+
+		//Crossover & Mutate each pair of selected parents
+		BitSet Offspring[] = new BitSet[2];  // temporarily holds 2 children during crossover/mutation
+		int firstParentIndex = 0;
+		if(selection == 1) {
+			// Keep elite copies
+			firstParentIndex = selParam;
+			for(int i = 0; i < selParam; i++) selected[i].setScore(0);
+		}
+		for (int d=firstParentIndex; d<popSize; d+=2) {
+			// in case of odd population, just mutate and replace last individual
+			if (d+1 >= popSize) {
+			Offspring[0] = Genetic.mutate(selected[d].getStrat(), mutateP, rand);
+			selected[d] = new Prisoner(Offspring[0]);
+			}
+			else {
+
+			if(rand.nextDouble() <= crossP) //Cross Over
+				Offspring = Genetic.crossover(selected[d].getStrat(),selected[d+1].getStrat(), rand);
+			else //clones
+				{
+				Offspring[0] = (BitSet)selected[d].getStrat().clone();
+				Offspring[1] = (BitSet)selected[d+1].getStrat().clone();
+				}
+
+			//Mutation
+			Offspring[0] = Genetic.mutate(Offspring[0],mutateP, rand);
+			Offspring[1] = Genetic.mutate(Offspring[1],mutateP, rand);
+
+			//Replacement - we are done with parents d & d+1, so just replace with children without
+			// creating an entire new array
+			selected[d] = new Prisoner(Offspring[0]);
+			selected[d+1] = new Prisoner(Offspring[1]);
+			}
+		}
+
+		// pass on children pop to be parents of next gen
+		curPopulation = selected;
+		repaint();	//update display (if any)
+		return curPopulation; //return the bred population
     }
 
-	private Prisoner[] tournamentSelection(Prisoner[] prisoners) {
-		ArrayList<Prisoner> prisonerList = new ArrayList<>(Arrays.asList(curPopulation));
+	private Prisoner[] tournamentSelection() {
+    	Prisoner[] selected = new Prisoner[popSize];
+		ArrayList<Prisoner> curPopList = new ArrayList<>(Arrays.asList(curPopulation));
 		for (int i = 0; i < popSize; i++) {
-			Collections.shuffle(prisonerList);
-			Prisoner max = prisonerList.get(0);
+			Collections.shuffle(curPopList);
+			Prisoner max = curPopList.get(0);
 			for (int j = 1; j < selParam; j++) {
-				if(prisonerList.get(i).getScore() > max.getScore()) max = prisonerList.get(i);
+				if(curPopList.get(i).getScore() > max.getScore()) max = curPopList.get(i);
 			}
-			prisoners[i] = max;
+			selected[i] = max;
 		}
-		return prisoners;
+		return selected;
 	}
 
-	private Prisoner[] fitPropSelection(Prisoner[] prisoners) {
+	private Prisoner[] fitPropSelection() {
+    	Prisoner[] selected = new Prisoner[popSize];
     	double variance = 0.0;
     	double totalFitness = 0.0;
     	double meanFitness;
@@ -160,42 +156,35 @@ public class Breeder extends JPanel
     	double stdDeviation;
     	double[] scaledFitnesses = new double[popSize];
     	double[] ticks = new double[popSize - selParam];
-		System.out.println("score: " + curPopulation[0].getScore());
+
     	// do elitism
 		if (selParam > 0) {
 			ArrayList<Prisoner> prisonerList = new ArrayList<>(Arrays.asList(curPopulation));
 			prisonerList.sort(Comparator.comparing(Prisoner::getScore));
 			for (int i = 0; i < selParam; i++) {
-				prisoners[i] = (Prisoner)(prisonerList.get(prisonerList.size() - 1 - i)).clone();
+				selected[i] = (Prisoner)(prisonerList.get(prisonerList.size() - 1 - i)).clone();
 			}
 		}
-		System.out.println("selParam: " + selParam);
-		System.out.println("popSize: " + popSize);
 
 		// calculate mean fitness
 		for (int i = 0; i < popSize; i++) {
 			totalFitness += curPopulation[i].getScore();
 		}
 		meanFitness = totalFitness / popSize;
-		System.out.println("meanFitness: " + meanFitness);
 
 		// calculate standard deviation
 		for (int i = 0; i < popSize; i++) {
 			variance += Math.pow((curPopulation[i].getScore() - meanFitness), 2);
 		}
 		variance /= popSize;
-		System.out.println("variance: " + variance);
 		stdDeviation = Math.pow(variance, 0.5);
-		System.out.println("stdDeviation: " + stdDeviation);
 
 		// calculate scaled fitnesses
 		for (int i = 0; i < popSize; i++) {
 			scaledFitnesses[i] = 1 + (curPopulation[i].getScore() - meanFitness) / (2 * stdDeviation);
 			meanFitnessScaled += scaledFitnesses[i];
 		}
-		System.out.println("sum of scaled: " + meanFitnessScaled);
 		meanFitnessScaled /= popSize;
-		System.out.println("mean scaled: " + meanFitnessScaled);
 
 		// select individuals
 		double random = rand.nextDouble() * meanFitnessScaled;
@@ -209,13 +198,14 @@ public class Breeder extends JPanel
 				i++;
 				fitSum += scaledFitnesses[i];
 			}
-			prisoners[j] = (Prisoner) curPopulation[i].clone();
+			selected[j] = (Prisoner) curPopulation[i].clone();
 		}
 
-    	return prisoners;
+    	return selected;
 	}
 
-	private Prisoner[] defaultSelection(Prisoner[] Selected) {
+	private Prisoner[] defaultSelection() {
+    	Prisoner[] selected = new Prisoner[popSize];
 		// find index of most fit individual
 		double maxFit = 0;
 		int indexBest = 0;
@@ -237,9 +227,9 @@ public class Breeder extends JPanel
 			{
 				selIndex = rand.nextInt(popSize);
 			}
-			Selected[i] = (Prisoner)curPopulation[selIndex].clone();
+			selected[i] = (Prisoner)curPopulation[selIndex].clone();
 		}
-		return Selected;
+		return selected;
 	}
 	
 	
