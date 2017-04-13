@@ -1,0 +1,9 @@
+Fitness Proportional Tests with Sigma Scaling:
+Unchanged Parameters: max gen = 250, players = 50, PD iterations = 100, temptation = 5, reward = 3, punishment = 1, TooTrusting Payoff = 0 
+
+1) “Normal” conditions (.95 crossover, .001 mutation, 1 elite strategy), playing against all defect. The expectation here is that strategies will trend toward always defecting, since always defecting is the best possible strategy when playing an opponent that always defects. After running the test, we played the fittest strategy against ‘always defect’ and they both scored the same (both scored 100 points after 100 rounds). This verifies the expected outcome of a trend toward solutions like ‘always defect’ when only playing ‘always defect.’
+2) “Normal” conditions (95% crossover, 0.1% mutation, 1 elite strategy), playing against all cooperate. The expectation here is that strategies will trend toward always defecting, since defecting against an opponent who always cooperates is the best possible strategy. After running the test, we played the fittest strategy against ‘always cooperate,’ and it scored 500 points while ‘always cooperate’ scored 0 (as expected).
+3) “Normal” conditions (.95 crossover, .001 mutation, 1 elite strategy), playing only tit-for-tat. Our best solution ended up playing perfectly against TFT and ‘all cooperate,’ while not doing great against ‘all defect.’ This is to be expected, though, since if it’s only playing TFT, and TFT is always cooperating when playing the evolved solution, there is no reason why it should evolve to play well against ‘all defect.’
+4) No variation, elitism = population size (test that elitism is working correctly) playing against every other opponent. The expectation here is for the population to evolve into something resembling TFT, since FINISH TYPING HERE
+
+Tournament Selection Tests:
