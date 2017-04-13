@@ -408,7 +408,7 @@ public class TournamentPanel extends JPanel implements ActionListener
 			startBtn.setEnabled(false);
 			stopped = false;
 			worker.start(); //Start evolution in background thread
-		}  	
+		}
 	 }
 	
 	/**
