@@ -43,6 +43,8 @@ public class TournamentPanel extends JPanel implements ActionListener
 	private String [] typeNames;
 	
 	private MenuFrame mFrame; //Master Frame
+
+	private int testIters = 5;
 	
 	/**
 	 *Create new Tournament panel
@@ -281,7 +283,7 @@ public class TournamentPanel extends JPanel implements ActionListener
 		if(stopped == true)
 		{
 			//Separate thread for computationally intensive evolution
-			worker = new SwingWorker() 
+			worker = new SwingWorker()
 			{
 				public Object construct()
 		        {	
@@ -396,10 +398,18 @@ public class TournamentPanel extends JPanel implements ActionListener
 						//Evolve a generation
 						pris = b1.Breed(pris);
 					}
+					System.out.println((min/(numP*(double)r1.getIterations())) + ", " +
+							(max/(numP*(double)r1.getIterations())) + ", " +
+							(avg/(numP*(double)r1.getIterations())));// + ", " + fitDlg.stratLbl.getText() + ", " + weakDlg.stratLbl.getText());
+
 					//Finished - Enable/Disable Buttons as required
 					stopped = true;
 					stopBtn.setEnabled(false);
 					startBtn.setEnabled(true);
+					if(testIters > 0) {
+						testIters--;
+						startBtn.doClick();
+					}
 		            return pris;
 		    	}
 		    };
