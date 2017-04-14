@@ -1,4 +1,4 @@
-code files we modified: Breeder.java, Prisoner.java, and TournamentPanel.java
+Files we modified: Breeder.java, Prisoner.java, and TournamentPanel.java
 We modified Breeder.java to include fitness proportional selection with sigma scaling if selection = 1 and tournament selection of selection = 2.
-We modified Prisoner.java to include a getAlwaysDefect function that generates a population of prisoners that always defect.
-We modified TournamentPanel.java to call getAlwaysDefect instead of getRand when generating an initial population, so each simulation starts with a population of always defecting prisoners rather than a random one.
+We modified Prisoner.java to include a getAllDefect function that generates a population of prisoners that always defect.
+We modified TournamentPanel.java to call getAllDefect instead of getRand when generating an initial population, so each simulation starts with a population of always defecting prisoners rather than a random one.
