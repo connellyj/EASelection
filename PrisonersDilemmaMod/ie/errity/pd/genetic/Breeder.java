@@ -134,13 +134,16 @@ public class Breeder extends JPanel
     }
 
 	private Prisoner[] tournamentSelection() {
+    	if(selParam > popSize) selParam = popSize;
     	Prisoner[] selected = new Prisoner[popSize];
 		ArrayList<Prisoner> curPopList = new ArrayList<>(Arrays.asList(curPopulation));
 		for (int i = 0; i < popSize; i++) {
 			Collections.shuffle(curPopList);
 			Prisoner max = curPopList.get(0);
 			for (int j = 1; j < selParam; j++) {
-				if(curPopList.get(i).getScore() > max.getScore()) max = curPopList.get(i);
+				if(curPopList.get(j).getScore() > max.getScore()) {
+					max = curPopList.get(j);
+				}
 			}
 			selected[i] = max;
 		}
@@ -148,6 +151,7 @@ public class Breeder extends JPanel
 	}
 
 	private Prisoner[] fitPropSelection() {
+		if(selParam > popSize) selParam = popSize;
     	Prisoner[] selected = new Prisoner[popSize];
     	double variance = 0.0;
     	double totalFitness = 0.0;
@@ -180,9 +184,12 @@ public class Breeder extends JPanel
 		stdDeviation = Math.pow(variance, 0.5);
 
 		// calculate scaled fitnesses
+		double sF;
 		for (int i = 0; i < popSize; i++) {
-			scaledFitnesses[i] = 1 + (curPopulation[i].getScore() - meanFitness) / (2 * stdDeviation);
-			meanFitnessScaled += scaledFitnesses[i];
+			sF = 1 + (curPopulation[i].getScore() - meanFitness) / (2 * stdDeviation);
+			if(sF < 0.1) sF = 0.1;
+			scaledFitnesses[i] = sF;
+			meanFitnessScaled += sF;
 		}
 		meanFitnessScaled /= popSize;
 

@@ -1,5 +1,6 @@
 package ie.errity.pd;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Random;
 import java.awt.Color;
@@ -300,6 +301,14 @@ public class Prisoner implements Cloneable
 	    }
 	return Players;
     }
+
+    public static Prisoner[] getAllDefect(int num_players) {
+		Prisoner[] prisoners = new Prisoner[num_players];
+		for (int i = 0; i < num_players; i++) {
+			prisoners[i] = new Prisoner("ALLD");
+		}
+		return prisoners;
+	}
 	
     /**
      *Returns a 2D array of Prisoners with random strategies

@@ -321,7 +321,7 @@ public class TournamentPanel extends JPanel implements ActionListener
 					type7.setText("<html><font color=" + color[7] +">" + typeNames[7] + ": " + (new Double(0)).toString() + " %" + "</font>");
 			
 					b1.setRules(r1);
-					Prisoner[] pris = Prisoner.getRand(numP, seed);
+					Prisoner[] pris = Prisoner.getAllDefect(numP);
 				
 					Tournament t1;
 		           	for(int i = 0; i < gen; i++)
@@ -418,7 +418,7 @@ public class TournamentPanel extends JPanel implements ActionListener
 			startBtn.setEnabled(false);
 			stopped = false;
 			worker.start(); //Start evolution in background thread
-		}  	
+		}
 	 }
 	
 	/**
