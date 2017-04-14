@@ -44,7 +44,7 @@ public class TournamentPanel extends JPanel implements ActionListener
 	
 	private MenuFrame mFrame; //Master Frame
 
-	private int testIters = 5;
+	private int testIters = 10;
 	
 	/**
 	 *Create new Tournament panel
